@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import dotenv from "dotenv";
 import { google } from "googleapis";
 import { z } from "zod";
+import { DateTime } from "luxon";
 
 dotenv.config();
 
@@ -43,22 +44,23 @@ server.registerResource(
 
 // tool function
 async function getMyCalendarDataByDate(date) {
+    // Parse the date in Bangladesh Standard Time (Asia/Dhaka)
+    const startBST = DateTime.fromISO(date, { zone: "Asia/Dhaka" }).startOf("day");
+    const endBST = startBST.plus({ days: 1 });
+    // Convert to UTC ISO strings for Google Calendar API
+    const timeMin = startBST.toUTC().toISO();
+    const timeMax = endBST.toUTC().toISO();
+
     const calendar = google.calendar({
         version: "v3",
         auth: process.env.GOOGLE_PUBLIC_API_KEY,
     });
 
-    // Calculate the start and end of the given date (UTC)
-    const start = new Date(date);
-    start.setUTCHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 1);
-
     try {
         const res = await calendar.events.list({
             calendarId: process.env.CALENDAR_ID,
-            timeMin: start.toISOString(),
-            timeMax: end.toISOString(),
+            timeMin,
+            timeMax,
             maxResults: 10,
             singleEvents: true,
             orderBy: "startTime",
