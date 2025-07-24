@@ -41,6 +41,26 @@ server.registerResource(
   })
 );
 
+server.registerTool(
+  "whoami",
+  {
+    title: "Name Reporter",
+    description: "Returns the name of the person using the tool",
+    inputSchema: {},
+  },
+  async () => {
+    return {
+      content: [
+        {
+          type: "text",
+          text: "Your name is Ibrahim Sajib.",
+        },
+      ],
+    };
+  }
+);
+
+
 
 // tool function
 async function getMyCalendarDataByDate(date) {
